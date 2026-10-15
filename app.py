@@ -7,7 +7,6 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey123'
 
-# --- ส่วนที่แก้ไข: รองรับทั้ง SQLite และ Neon (PostgreSQL) บน Vercel ---
 database_url = os.environ.get('DATABASE_URL')
 
 if database_url and database_url.startswith("postgres://"):
@@ -15,7 +14,6 @@ if database_url and database_url.startswith("postgres://"):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# -------------------------------------------------------------
 
 db.init_app(app)
 bcrypt = Bcrypt(app)
