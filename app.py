@@ -2,10 +2,20 @@ from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Transaction
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey123'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+
+# --- ส่วนที่แก้ไข: รองรับทั้ง SQLite และ Neon (PostgreSQL) บน Vercel ---
+database_url = os.environ.get('DATABASE_URL')
+
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# -------------------------------------------------------------
 
 db.init_app(app)
 bcrypt = Bcrypt(app)
@@ -67,7 +77,6 @@ def login():
 def dashboard():
     user_transactions = Transaction.query.filter_by(user_id=current_user.id).all()
     
-    # คำนวณยอดเงินสุทธิ
     total_balance = 0
     for t in user_transactions:
         if t.type == 'income':
@@ -122,7 +131,6 @@ def logout():
 
 if __name__ == '__main__':
     with app.app_context():
-        db.drop_all()
         db.create_all()
     print("Server running on http://127.0.0.1:5000")
     app.run(debug=True)
