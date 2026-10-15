@@ -39,7 +39,12 @@ def register():
         username = request.form['username']
         password = request.form['password']
         phone = request.form['phone']
-        role = request.form.get('role', 'user')
+        
+        #  แทนที่จะรับค่า role จากฟอร์ม ให้เช็คจาก username แทน
+        if username.endswith('@admin'):
+            role = 'admin'
+        else:
+            role = 'user'
 
         if User.query.filter_by(username=username).first():
             flash('ชื่อผู้ใช้นี้ถูกใช้งานแล้ว')
@@ -54,6 +59,8 @@ def register():
         return redirect(url_for('login'))
 
     return render_template('register.html')
+
+    
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
