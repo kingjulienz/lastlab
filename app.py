@@ -71,11 +71,18 @@ def login():
 
         if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
-            return redirect(url_for('dashboard'))
+            
+            # 🔀 เช็กสิทธิ์ตรงนี้: ถ้าเป็น admin ให้เด้งไปหน้า /admin ทันที
+            if user.role == 'admin':
+                return redirect(url_for('admin_panel'))
+            else:
+                return redirect(url_for('dashboard'))
         else:
             flash('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง')
-
+            
     return render_template('login.html')
+
+    
 
 @app.route('/dashboard')
 @login_required
@@ -139,3 +146,28 @@ if __name__ == '__main__':
         db.create_all()
     print("Server running on http://127.0.0.1:5000")
     app.run(debug=True)
+
+
+    # 🗑️ วางฟังก์ชัน delete_user ไว้ตรงนี้ (ก่อนรัน app.run)
+@app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+  if current_user.role != 'admin':
+    abort(403)
+
+  if user_id == current_user.id:
+    flash('คุณไม่สามารถลบบัญชีของตนเองได้', 'error')
+    return redirect(url_for('admin_panel'))
+
+  user_to_delete = User.query.get_or_404(user_id)
+  Transaction.query.filter_by(user_id=user_id).delete()
+  db.session.delete(user_to_delete)
+  db.session.commit()
+
+  flash(f'ลบผู้ใช้งาน {user_to_delete.username} เรียบร้อยแล้ว', 'success')
+  return redirect(url_for('admin_panel'))
+
+
+# บรรทัดเปิดเซิร์ฟเวอร์ให้อยู่ล่างสุด
+if __name__ == '__main__':
+  app.run(debug=True)
