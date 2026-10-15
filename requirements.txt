@@ -1,5 +1,5 @@
 Flask
 Flask-SQLAlchemy
-Flask-Login
 Flask-Bcrypt
-Werkzeug
+Flask-Login
+psycopg2-binary
